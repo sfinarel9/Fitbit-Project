@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>My Fitbit Profile!</title>
+	<link rel="stylesheet" href=" https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+	<script src="https://code.jquery.com/jquery-3.4.1.js"></script>
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+	<script src='https://cdn.jsdelivr.net/npm/apexcharts'></script>
+	<script src="./script.js"></script>
+</head>
+
+<body style="background-color:#ffe6e6;">
+	<div class="container">
+		<div class="col-md-12">
+			<h3 style="color:#407" class="text-center" style="font-family:courier;">
+				<b>Γιανναδάκη Νικολέτα τπ4715 , Σφηναρολάκη Ελευθερία τπ4737</b> <br> <br>
+				<b>My Profile</b>
+			</h3>
+			<h2 style="color:#407"> Profile Information </h2><br>
+			<h3>
+				<p id="Name"></p><br>
+				<p id="age"></p><br>
+				<p id="timezone"></p><br>
+			</h3>
+			<script>                                         //Read profile info
+				var prof = "Profile.json";
+				$.getJSON(prof, function (data) {
+					name = data.user.fullName;
+					age = data.user.age;
+					timezone = data.user.timezone;
+					$('#Name').append('<p> Name: ' + name + '</p>');
+					$('#age').append('<p> Age: ' + age + '</p>');
+					$('#timezone').append('<p> Timezone: ' + timezone + '</p>');
+				});
+			</script>
+
+
+			<!-- CHART 1 -->
+
+
+			<h2 style="color:#407"> Activity Goals(Steps, Calories, Distance) </h2><br>
+			<div class="container" id="chart1">
+				<script>
+					$.getJSON("Calories0.json", function (data) {
+						var steps = data.goals.steps;
+						var calories = data.goals.caloriesOut;
+						var distance = data.goals.distance;
+						var options = {
+							series: [Math.round(steps * 100 / 270), (calories * 100 / 270).toFixed(2), (distance * 100 / 270).toFixed(2)],
+							chart: {
+								height: 450,
+								type: 'radialBar',
+							},
+							title: {
+								text: 'Steps, Calories, Distance Data',
+								align: 'left'
+							},
+							plotOptions: {
+								radialBar: {
+									offsetY: 0,
+									startAngle: -180,
+									endAngle: 90,
+									hollow: {
+										margin: 7,
+										size: '60%',
+										background: 'transparent'
+									},
+									dataLabels: {
+										name: { show: false },
+										value: { show: false }
+									}
+								}
+							},
+							colors: ['#1ab7ea', '#0084ff', '#39539E'],
+							labels: ['Steps', 'Calories', 'Distance'],
+							legend: { 										//Charts labels
+								show: true,
+								floating: true,
+								fontSize: '18px',
+								position: 'left',
+								offsetX: 570,
+								offsetY: 290,
+								labels: { useSeriesColors: false },
+								formatter: function (seriesName, opts) {
+									return seriesName + ": " + opts.w.globals.series[opts.seriesIndex]
+								}
+							}
+						};
+						var chart = new ApexCharts(document.querySelector("#chart1"), options);
+						chart.render();
+					});
+				</script>
+			</div>
+			<br>
+
+			<!-- CHART 2 -->
+
+			<h2 style="color:#407"> User Activity Data </h2><br>
+			<div class="container" id="chart2">
+				<script>
+					var data1 = [];
+					var data2 = [];
+					var data3 = [];
+					var options;
+					function wait(ms) {
+						var start = new Date().getTime();
+						var end = start;
+						while (end < start + ms) {
+							end = new Date().getTime();
+						}
+					}
+					for (let i = 0; i < 7; i++) {
+						$.getJSON('Calories' + i + '.json', function (data) {
+							data1.push(data.goals.steps);
+							data2.push(data.goals.caloriesOut);
+							data3.push(data.goals.distance);
+							if (i == 6) {
+								options = {
+									series: [{
+										name: "Steps",
+										data: data1
+									},
+									{
+										name: "Calories",
+										data: data2
+									},
+									{
+										name: "Distance",
+										data: data3
+									}],
+									chart: {
+										width: 1000,
+										height: 400,
+										type: 'line'
+									},
+									dataLabels: { enabled: false }, //show values in lines
+									stroke: { curve: 'smooth' },
+									title: {
+										text: 'Activity Data by Week',
+										align: 'left'
+									},
+									grid: {
+										row: {
+											colors: ['#f3f3f3', 'transparent'], // background
+											opacity: 0.5
+										},
+									},
+									xaxis: { categories: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] }
+								};
+								var chart = new ApexCharts(document.querySelector("#chart2"), options);
+								chart.render();
+							}
+						});
+						wait(100);// if i dont wait a little, every time i refresh my site, chart has different shape(values per day)
+					}
+				</script>
+			</div>
+			<br>
+
+			<!-- CHART 3 -->
+
+
+			<h2 style="color:#407"> User Sleep Data</h2><br>
+			<div class="container" id="chart3">
+				<script>
+					$.getJSON("MySleepData.json", function (data) {
+						var minutes1 = data.sleep[0].levels.summary.asleep.minutes;
+						var minutes2 = data.sleep[1].levels.summary.asleep.minutes;
+						var totalmins = data.summary.totalMinutesAsleep;
+						//CHART 3
+						var options = {
+							series: [{
+								name: 'First Sleep Duration',
+								data: [minutes1]
+							}, {
+								name: 'Second Sleep Duration',
+								data: [minutes2]
+							}, {
+								name: 'Total Sleep Duration',
+								data: [totalmins]
+							}],
+							chart: {
+								height: 400,
+								type: 'bar',
+							},
+							title: {
+								text: 'Sleep Duration in Minutes',
+								align: 'left'
+							},
+							plotOptions: {
+								bar: {
+									columnWidth: '200%',
+									endingShape: 'rounded'
+								}
+							},
+							dataLabels: { enabled: false },
+							stroke: { width: 2 },
+							grid: {
+								row: { colors: ['#f3f3f3', 'transparent'] }
+							},
+							xaxis: {
+								tickPlacement: 'on',
+								categories: [data.sleep[0].dateOfSleep + ' Sleep Data']
+							},
+							fill: {                          //Column color
+								type: 'gradient',
+								gradient: {
+									shade: 'light',
+									type: "horizontal",
+									shadeIntensity: 0.9,
+									inverseColors: true,
+									opacityFrom: 3.85,
+									opacityTo: 5.85
+								},
+							}
+						};
+
+						var chart = new ApexCharts(document.querySelector("#chart3"), options);
+						chart.render();
+					});
+				</script>
+			</div>
+		</div>
+	</div>
+</body>
+
+</html>
